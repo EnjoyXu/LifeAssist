@@ -11,6 +11,7 @@ import javafx.scene.input.MouseEvent
 import javafx.scene.layout.FlowPane
 
 
+
 class MyTab(_string: String, _index: Int) : Tab(_string) {
     //用来标志Tab的序号
     var index = SimpleIntegerProperty(_index)
@@ -24,9 +25,6 @@ class MyTab(_string: String, _index: Int) : Tab(_string) {
                 (this.content as FlowPane).prefWidthProperty().bind(this.widthProperty())
             }
         }
-
-        // 绑定一个数据list
-
     }
 
     fun add(node: Node) {
@@ -39,11 +37,20 @@ class MyTab(_string: String, _index: Int) : Tab(_string) {
         ((this.content as ScrollPane).content as FlowPane).children.removeAt(index)
     }
 
+    fun changeNumber(labelIndex: Int, change: Int) {
+        //先removeAt。再add（int，ele）新的
+        val _text = (((this.content as ScrollPane).content as FlowPane).children[labelIndex] as MyLabel).text
+        val _spaceIndex = _text.indexOf(" ")
+        (((this.content as ScrollPane).content as FlowPane).children[labelIndex] as MyLabel).text =
+            _text.substring(0, _spaceIndex) + " " +
+                    ((_text.substring(_spaceIndex + 1, _text.length) as String).toInt() + change).toString()
+    }
 
 }
 
-class MyLabel(_string: String, _tabIndex: Int = 0) : Label() {
+class MyLabel(_string: String, _idNumber: Long, _tabIndex: Int = 0) : Label() {
     var tabIndex = _tabIndex
+    val id_number = _idNumber
 
     init {
         this.apply {
@@ -52,14 +59,22 @@ class MyLabel(_string: String, _tabIndex: Int = 0) : Label() {
             addEventHandler(MouseEvent.MOUSE_CLICKED, EventHandler {
                 //左键
                 if (it.button.name == MouseButton.PRIMARY.name) {
-                    println("left")
+                    UIView.changeInfo[0] = tabIndex
+                    UIView.changeInfo_idNumber.value = id_number
                     if (tabIndex != 0) {
-                        println("From $tabIndex To 0")
+//                        println("$id_number From $tabIndex To 0")
+                        UIView.changeInfo[1] = 0
+
                     } else {
-                        println("From $tabIndex To " + UIView.selectedTabIndex.value)
+//                        println("$id_number From $tabIndex To " + UIView.selectedTabIndex.value)
+                        UIView.changeInfo[1] = UIView.selectedTabIndex.value
+
                     }
+                    //传递改变的信号
+                    UIView.changeFlag.value = -1 * UIView.changeFlag.value
+
                 } else if (it.button.name == MouseButton.SECONDARY.name) {
-                    println("Right")
+
                 }
             })
 

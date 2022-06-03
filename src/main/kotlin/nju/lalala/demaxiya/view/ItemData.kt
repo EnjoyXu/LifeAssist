@@ -6,16 +6,14 @@ class ItemData(
     var number: Int,
 
     ) {
-    companion object {
-        // 静态变量，类变量，每次构造时加1，用来标志不同的物体
-        var ID_NUMBER = 0
+
+    var id_number: Long = System.currentTimeMillis()
+
+
+    fun copy(): ItemData {
+        val newItem = ItemData(this.type, this.number).apply {
+            this.id_number = this@ItemData.id_number
+        }
+        return newItem
     }
-
-    init {
-        val id_number = ID_NUMBER
-        ID_NUMBER += 1
-    }
-
-
 }
-
