@@ -56,7 +56,7 @@ class UIView : Application() {
             // 创建Tab
             val _tab = MyTab("$i", i)
             itemList[i].forEach {
-                _tab.add(MyLabel("${it.type} ${it.number}", it.id_number, i))
+                _tab.add(MyLabel(it, i))
             }
 //             在TabList中添加tab
             tabList.add(_tab)
@@ -96,7 +96,7 @@ class UIView : Application() {
                 val newItem = _item.copy().apply { this.number = 1 }
                 itemList[_toTabIndex] += newItem
                 tabList[_toTabIndex].add(
-                    MyLabel("${newItem.type} ${newItem.number}", newItem.id_number, _toTabIndex)
+                    MyLabel(newItem ,_toTabIndex)
                 )
             }
             else -> {
@@ -107,18 +107,16 @@ class UIView : Application() {
         }
     }
     override fun start(primaryStage: Stage) {
+        //模拟一下数据
 
         val itemTabList1 = mutableListOf<ItemData>(
-            ItemData("毛衣", 2),
-//            ItemData("袜子", 5)
+            ItemData("毛衣", 2,true,"毛衣ssssssss")
         )
         val itemTabList2 = mutableListOf<ItemData>(
-//            ItemData("毛衣", 2),
-            ItemData("袜子", 5)
+            ItemData("袜子", 5,false,"袜子")
         )
         val itemTabList3 = mutableListOf<ItemData>(
-//            ItemData("毛衣", 2),
-//            ItemData("袜子", 5)
+
         )
 
         // 数据管理列表
@@ -164,4 +162,5 @@ class UIView : Application() {
 
 
     }
+
 }

@@ -15,9 +15,10 @@
 }
 .label {
     -fx-background-color:"#cccccc";
-    -fx-alignment : bottom-right;
-    -fx-pref-width : 50.0;
-    -fx-pref-height : 50.0;
+    -fx-alignment : center;
+    -fx-pref-width : 60.0;
+    -fx-pref-height : 60.0;
     -fx-border-style  :solid;
+    -fx-text-overrun : leading-ellipsis;
 }
 

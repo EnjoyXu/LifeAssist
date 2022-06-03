@@ -3,13 +3,15 @@ package nju.lalala.demaxiya.view
 import javafx.beans.property.SimpleIntegerProperty
 import javafx.event.EventHandler
 import javafx.scene.Node
+import javafx.scene.control.ContentDisplay
 import javafx.scene.control.Label
 import javafx.scene.control.ScrollPane
 import javafx.scene.control.Tab
+import javafx.scene.image.ImageView
 import javafx.scene.input.MouseButton
 import javafx.scene.input.MouseEvent
 import javafx.scene.layout.FlowPane
-
+import tornadofx.imageview
 
 
 class MyTab(_string: String, _index: Int) : Tab(_string) {
@@ -48,9 +50,11 @@ class MyTab(_string: String, _index: Int) : Tab(_string) {
 
 }
 
-class MyLabel(_string: String, _idNumber: Long, _tabIndex: Int = 0) : Label() {
+class MyLabel(_string: String, _idNumber: Long, _isthick:Boolean,_type:String, _tabIndex: Int = 0) : Label() {
     var tabIndex = _tabIndex
     val id_number = _idNumber
+
+    constructor(_item:ItemData ,_tabIndex: Int) : this("${_item.description} ${_item.number}", _item.id_number,_item.isthick,_item.type,_tabIndex)
 
     init {
         this.apply {
@@ -77,8 +81,16 @@ class MyLabel(_string: String, _idNumber: Long, _tabIndex: Int = 0) : Label() {
 
                 }
             })
-
         }
+        when(_isthick){
+            true -> this.style = "-fx-background-color : #FFA07A"
+            else -> this.style = "-fx-background-color : #87CEFA"
+        }
+        this.graphic = ImageView(ItemData.map["袜子"]).apply {}
+//        this.graphic.style = "-fx-alignment : center"
+//        label.setContentDisplay(ContentDisplay.TOP)
+        this.contentDisplay = ContentDisplay.TOP
+
     }
 
 }
