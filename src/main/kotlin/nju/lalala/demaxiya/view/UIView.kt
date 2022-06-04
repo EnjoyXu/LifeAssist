@@ -11,17 +11,21 @@ import javafx.scene.Scene
 import javafx.scene.control.Label
 
 import javafx.scene.control.TabPane
+import javafx.scene.input.KeyCode
+import javafx.scene.input.KeyCodeCombination
 
 import javafx.scene.layout.Priority
 import javafx.scene.layout.VBox
 import javafx.stage.Stage
+import tornadofx.bind
 import tornadofx.vgrow
+import java.awt.event.KeyEvent
 
 
 class UIView : Application() {
     companion object {
         //用来跟踪是哪个面板被选中
-        var selectedTabIndex = SimpleIntegerProperty(1)
+        var selectedTabIndex : SimpleIntegerProperty? = SimpleIntegerProperty(1)
         var changeInfo = SimpleListProperty(FXCollections.observableList(listOf(0, 0)))
         var changeInfo_idNumber = SimpleLongProperty(0)
         var changeFlag = SimpleIntegerProperty(1)
@@ -45,16 +49,20 @@ class UIView : Application() {
     // 创建tab图形化列表
     var tabList = mutableListOf<MyTab>()
 
+    var tabNameList = mutableListOf<String>()
     // 数据管理列表
     var itemList = mutableListOf<MutableList<ItemData>>()
 
     private fun initializeUI() {
-        //初始化UI
+        //根据itemList初始化UI
+        tabpaneUp.tabs.add(MyTab(" ",0))
+        tabpaneUp.tabs.removeAll(tabList)
         tabList.clear()
+        tabpaneDown.tabs.clear()
         // 根据itemList中的内容来更新图形化界面
         for (i in 0 until itemList.size) {
             // 创建Tab
-            val _tab = MyTab("$i", i)
+            val _tab = MyTab(MyController.tabNameList[i], i)
             itemList[i].forEach {
                 _tab.add(MyLabel(it, i))
             }
@@ -62,15 +70,18 @@ class UIView : Application() {
             tabList.add(_tab)
 
             when (i) {
-                0 -> tabpaneDown.tabs.add(_tab)
-                else -> tabpaneUp.tabs.add(_tab)
+                0 -> tabpaneDown.tabs.add(tabList.last())
+                else -> tabpaneUp.tabs.add(tabList.last())
             }
         }
+        tabpaneUp.tabs.removeAt(0)
+        //因为clear了tab，所以必须重置已选的tab
+        selectedTabIndex?.value = 1
 
     }
 
     private fun update() {
-        //更新
+        //移动事件后的更新
         val _fromTabIdex: Int = changeInfo[0]
         val _toTabIndex: Int = changeInfo[1]
         val _id_number: Long = changeInfo_idNumber.value
@@ -106,36 +117,47 @@ class UIView : Application() {
             }
         }
     }
+
+    private fun touchData(){
+        itemList =MyController.itemList
+        tabNameList  = MyController.tabNameList
+    }
+
     override fun start(primaryStage: Stage) {
         //模拟一下数据
 
-        val itemTabList1 = mutableListOf<ItemData>(
-            ItemData("毛衣", 2,true,"毛衣ssssssss")
-        )
-        val itemTabList2 = mutableListOf<ItemData>(
-            ItemData("袜子", 5,false,"袜子")
-        )
-        val itemTabList3 = mutableListOf<ItemData>(
-
-        )
-
-        // 数据管理列表
-        itemList.apply {
-            add(itemTabList1)
-            add(itemTabList2)
-            add(itemTabList3)
-        }
+//        val itemTabList1 = mutableListOf<ItemData>(
+//            ItemData("毛衣", 2,true,"毛衣ssssssss")
+//        )
+//        val itemTabList2 = mutableListOf<ItemData>(
+//            ItemData("袜子", 5,false,"袜子")
+//        )
+//        val itemTabList3 = mutableListOf<ItemData>(
+//
+//        )
+//
+//        // 数据管理列表
+//        itemList.apply {
+//            add(itemTabList1)
+//            add(itemTabList2)
+//            add(itemTabList3)
+//        }
+        //得到数据
+        touchData()
         //根据数据生成ui
         initializeUI()
 
+        //点击label事件的响应
         changeFlag.addListener { observable, oldValue, newValue ->
             update()
         }
 
+        // 监听上面版选定的tab
         tabpaneUp.selectionModel.selectedItemProperty().addListener { observable, oldValue, newValue ->
-
-            Companion.selectedTabIndex = (newValue as MyTab).index
+            selectedTabIndex = (newValue as MyTab).index
         }
+
+
 
         // root
         val root = VBox().apply {
@@ -146,8 +168,19 @@ class UIView : Application() {
         }
 
         val scene = Scene(root)
+
         scene.root.stylesheets.add("file:src/main/kotlin/nju/lalala/demaxiya/css/UICSS.css")
-//        scene.stylesheets.add(f.toURI().toExternalForm() )
+        scene.accelerators.put(
+            KeyCodeCombination(
+                KeyCode.S,KeyCodeCombination.CONTROL_ANY
+            )
+        ){
+            MyController.writeInTo(tabNameList,itemList)
+            touchData()
+            initializeUI()
+            println("saved Successfully")
+        }
+
 
         primaryStage.apply {
             title = "LifeAssist"
@@ -159,7 +192,6 @@ class UIView : Application() {
         }
         tabpaneUp.prefHeightProperty().bind(scene.heightProperty().divide(2))
         tabpaneDown.prefHeightProperty().bind(scene.heightProperty().divide(2))
-
 
     }
 

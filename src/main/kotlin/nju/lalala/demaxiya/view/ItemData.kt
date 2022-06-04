@@ -1,16 +1,23 @@
 package nju.lalala.demaxiya.view
 
 import kotlinx.serialization.json.*
+import org.apache.poi.ss.usermodel.CellType
+import org.apache.poi.ss.usermodel.WorkbookFactory
+import org.apache.poi.xssf.usermodel.XSSFWorkbook
+import org.apache.xmlbeans.impl.xb.xsdschema.BlockSet.Member2.Item
 import java.io.File
-import java.io.StringReader
-import kotlin.reflect.typeOf
+import java.io.FileInputStream
+import java.io.FileOutputStream
+import java.nio.file.Paths
+
 
 //数据储存的类
 class ItemData(
     val type: String, //类型
     var number: Int, //数量
     val isthick : Boolean,
-    var description : String  = "" // 描述
+    var description : String  = "", // 描述
+    _idNumber : Long = (-1.0).toLong()
     ) {
 
     companion object{
@@ -18,8 +25,11 @@ class ItemData(
         val map = mapOf<String,String>("袜子" to "C:/Users/80605/Downloads/icons8-socks-32.png")
     }
 
+    var id_number: Long = when(_idNumber){
+        (-1).toLong() -> System.currentTimeMillis()
+        else -> _idNumber
+    }
 
-    var id_number: Long = System.currentTimeMillis()
     fun copy(): ItemData {
         val newItem = ItemData(this.type, this.number, this.isthick,this.description).apply {
             this.id_number = this@ItemData.id_number
@@ -28,34 +38,164 @@ class ItemData(
     }
 }
 
-object MyMap{
+object MyIconMap{
     private fun getMyJson(): JsonElement {
         val string = File("src/data/config/icon_config.json").readText()
 //            println(string)
         return Json.parseToJsonElement(string)
     }
 
-    private fun getAllMap(json: JsonElement):Map<String,String>{
+    private fun getAllMap(json: JsonElement):Triple<Map<String,String>,List<String>,List<List<String>>>{
         val map= mutableMapOf<String,String>()
+        val firstLayerKeys = mutableListOf<String>()
+        val secondLayerKeys = mutableListOf<List<String>>()
         for(firstLayer in json.jsonObject.keys){
-            println(firstLayer)
+            firstLayerKeys += firstLayer
+
+            val _list = mutableListOf<String>()
             for(secondLayer in (json.jsonObject[firstLayer] as JsonElement).jsonObject.keys){
-                println((json.jsonObject[firstLayer] as JsonElement).jsonObject[secondLayer])
+                _list += secondLayer
                 map += secondLayer to ((json.jsonObject[firstLayer] as JsonElement).jsonObject[secondLayer].toString())
             }
+            secondLayerKeys += _list
         }
 
-        return map
+        return Triple(map,firstLayerKeys.toList(),secondLayerKeys.toList())
     }
 
     val json = getMyJson()
 
-    val map = getAllMap(json)
+    private val triple =  getAllMap(json)
+
+    val typeToIconMap = triple.first
+    val firstKeys = triple.second
+    val secondKeys = triple.third
+
+}
+
+object MyController{
+    private fun readExcel():Pair<MutableList<String>,MutableList<MutableList<ItemData>>>{
+//        :MutableList<MutableList<ItemData>>
+
+        val tabNameList = mutableListOf<String>()
+        val itemList = mutableListOf<MutableList<ItemData>>()
+
+        // 读取excel数据返回itemList
+        val workbook = WorkbookFactory.create(FileInputStream("src/data/data.xlsx"))
+        val iterator = workbook.sheetIterator()
 
 
+        var i = 0
+        while (iterator.hasNext()){
+            //遍历一个sheet内的内容
+            val _sheet = iterator.next()
+
+            val _tabItemList = mutableListOf<ItemData>()
+            _sheet.rowIterator().asSequence().forEachIndexed{index,row->
+                //不读取第一行title
+                if (index != 0){
+                    //获得一行的数据
+                    //类型    描述	数量	    厚度  	id
+                    val valuesSeq = row.cellIterator().asSequence().map{
+                        when(it.cellType){
+                            CellType.NUMERIC -> it.numericCellValue.toString()
+                            else -> it.stringCellValue
+                        }
+                    }.toList()
 
 
+                    //构建item
+                    println(valuesSeq)
+                    _tabItemList += ItemData(
+                        valuesSeq[0] ,
+                        valuesSeq[2].let{
+                                        when(it.contains(".")){
+                                            true -> it.substringBefore(".").toInt()
+                                            else -> it.toInt()
+                                        }
+                        },
+                        when(valuesSeq[3]){
+                            "厚" -> true
+                            else -> false
+                        },
+                        valuesSeq[1] as String,
+                        valuesSeq[4].let{
+                            when(it.contains(".")){
+                                true -> it.substringBefore(".").toLong()
+                                else -> it.toLong()
+                            }
+                        }
+
+                    )
+
+                }
+            }
+
+            itemList += _tabItemList
+            tabNameList += _sheet.sheetName
+        }
+
+        return Pair(tabNameList,itemList)
+    }
+
+    private var  excelData = readExcel()
+    var tabNameList = excelData.first
+    var itemList = excelData.second
+
+    private fun update(){
+        excelData = readExcel()
+        tabNameList = excelData.first
+        itemList = excelData.second
+    }
+
+    fun writeInTo(_tabNameList: MutableList<String>,_itemList: MutableList<MutableList<ItemData>>){
+
+        val writeIntoPath = "src/data/data.xlsx"
+
+        val workBook = XSSFWorkbook()
+        //遍历不同的sheet
+        _tabNameList.forEachIndexed{sheetIndex,sheetName->
+            val _sheet = workBook.createSheet(sheetName).apply {
+                //第一行先写title
+                this.createRow(0).apply {
+                    createCell(0).setCellValue("类型")
+                    createCell(1).setCellValue("描述")
+                    createCell(2).setCellValue("数量")
+                    createCell(3).setCellValue("厚度")
+                    createCell(4).setCellValue("id")
+
+                }
+            }
+
+            val _sheetItemList = _itemList[sheetIndex]
+
+            //遍历sheet内不同的物品
+            _sheetItemList.forEachIndexed { itemIndex, itemData ->
+                //注意因为第一行是title，所以写入时index+1
+                _sheet.createRow(itemIndex+1).apply {
+                    createCell(0).setCellValue(itemData.type)
+                    createCell(1).setCellValue(itemData.description)
+                    createCell(2).setCellValue((itemData.number).toString())
+                    createCell(3).setCellValue(itemData.isthick.let {
+                        when(it){
+                            true -> "厚"
+                            else -> "薄"
+                        }
+                    })
+                    createCell(4).setCellValue(itemData.id_number.toString())
+
+                }
 
 
+            }
+
+        }
+
+        val fileOutputStream = FileOutputStream(writeIntoPath)
+        workBook.write(fileOutputStream)
+        fileOutputStream.close()
+
+        update()
+    }
 
 }

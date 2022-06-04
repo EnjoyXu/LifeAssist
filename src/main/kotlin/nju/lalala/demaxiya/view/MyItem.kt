@@ -11,7 +11,7 @@ import javafx.scene.image.ImageView
 import javafx.scene.input.MouseButton
 import javafx.scene.input.MouseEvent
 import javafx.scene.layout.FlowPane
-import tornadofx.imageview
+
 
 
 class MyTab(_string: String, _index: Int) : Tab(_string) {
@@ -63,19 +63,22 @@ class MyLabel(_string: String, _idNumber: Long, _isthick:Boolean,_type:String, _
             addEventHandler(MouseEvent.MOUSE_CLICKED, EventHandler {
                 //左键
                 if (it.button.name == MouseButton.PRIMARY.name) {
-                    UIView.changeInfo[0] = tabIndex
-                    UIView.changeInfo_idNumber.value = id_number
-                    if (tabIndex != 0) {
+                    if (it.clickCount == 1){
+                        UIView.changeInfo[0] = tabIndex
+                        UIView.changeInfo_idNumber.value = id_number
+                        if (tabIndex != 0) {
 //                        println("$id_number From $tabIndex To 0")
-                        UIView.changeInfo[1] = 0
+                            UIView.changeInfo[1] = 0
 
-                    } else {
+                        } else {
 //                        println("$id_number From $tabIndex To " + UIView.selectedTabIndex.value)
-                        UIView.changeInfo[1] = UIView.selectedTabIndex.value
+                            UIView.changeInfo[1] = UIView.selectedTabIndex?.value
 
+                        }
+                        //传递改变的信号
+                        UIView.changeFlag.value = -1 * UIView.changeFlag.value
                     }
-                    //传递改变的信号
-                    UIView.changeFlag.value = -1 * UIView.changeFlag.value
+
 
                 } else if (it.button.name == MouseButton.SECONDARY.name) {
 
@@ -86,9 +89,8 @@ class MyLabel(_string: String, _idNumber: Long, _isthick:Boolean,_type:String, _
             true -> this.style = "-fx-background-color : #FFA07A"
             else -> this.style = "-fx-background-color : #87CEFA"
         }
-        this.graphic = ImageView(ItemData.map["袜子"]).apply {}
-//        this.graphic.style = "-fx-alignment : center"
-//        label.setContentDisplay(ContentDisplay.TOP)
+
+        this.graphic = ImageView("file:src/data/icons/"+MyIconMap.typeToIconMap[_type].toString().replace("\"",""))
         this.contentDisplay = ContentDisplay.TOP
 
     }
