@@ -4,34 +4,30 @@ import kotlinx.serialization.json.*
 import org.apache.poi.ss.usermodel.CellType
 import org.apache.poi.ss.usermodel.WorkbookFactory
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
-import org.apache.xmlbeans.impl.xb.xsdschema.BlockSet.Member2.Item
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
-import java.nio.file.Paths
+
 
 
 //数据储存的类
 class ItemData(
-    val type: String, //类型
+    var type: String, //类型
     var number: Int, //数量
-    val isthick : Boolean,
+    var thickness : String,
     var description : String  = "", // 描述
-    _idNumber : Long = (-1.0).toLong()
+    _idNumber : Long = (-1.0).toLong(),
+    var picPath : String = ""
     ) {
-
-    companion object{
-        // 创建type-图片url键值对
-        val map = mapOf<String,String>("袜子" to "C:/Users/80605/Downloads/icons8-socks-32.png")
-    }
 
     var id_number: Long = when(_idNumber){
         (-1).toLong() -> System.currentTimeMillis()
         else -> _idNumber
     }
 
+
     fun copy(): ItemData {
-        val newItem = ItemData(this.type, this.number, this.isthick,this.description).apply {
+        val newItem = ItemData(this.type, this.number, this.thickness,this.description).apply {
             this.id_number = this@ItemData.id_number
         }
         return newItem
@@ -40,7 +36,7 @@ class ItemData(
 
 object MyIconMap{
     private fun getMyJson(): JsonElement {
-        val string = File("src/data/config/icon_config.json").readText()
+        val string = File("data/config/icon_config.json").readText()
 //            println(string)
         return Json.parseToJsonElement(string)
     }
@@ -81,11 +77,10 @@ object MyController{
         val itemList = mutableListOf<MutableList<ItemData>>()
 
         // 读取excel数据返回itemList
-        val workbook = WorkbookFactory.create(FileInputStream("src/data/data.xlsx"))
+        val workbook = WorkbookFactory.create(FileInputStream("data/data.xlsx"))
         val iterator = workbook.sheetIterator()
 
 
-        var i = 0
         while (iterator.hasNext()){
             //遍历一个sheet内的内容
             val _sheet = iterator.next()
@@ -95,7 +90,7 @@ object MyController{
                 //不读取第一行title
                 if (index != 0){
                     //获得一行的数据
-                    //类型    描述	数量	    厚度  	id
+                    //类型    描述	数量	    厚度  	id  图片path
                     val valuesSeq = row.cellIterator().asSequence().map{
                         when(it.cellType){
                             CellType.NUMERIC -> it.numericCellValue.toString()
@@ -107,24 +102,23 @@ object MyController{
                     //构建item
                     println(valuesSeq)
                     _tabItemList += ItemData(
-                        valuesSeq[0] ,
-                        valuesSeq[2].let{
+                        type = valuesSeq[0] ,
+                        number = valuesSeq[2].let{
                                         when(it.contains(".")){
                                             true -> it.substringBefore(".").toInt()
                                             else -> it.toInt()
                                         }
                         },
-                        when(valuesSeq[3]){
-                            "厚" -> true
-                            else -> false
-                        },
-                        valuesSeq[1] as String,
-                        valuesSeq[4].let{
+                        thickness = valuesSeq[3],
+                        description = valuesSeq.getOrElse(1){""} as String,
+                        _idNumber =   valuesSeq[4].let{
                             when(it.contains(".")){
                                 true -> it.substringBefore(".").toLong()
                                 else -> it.toLong()
                             }
-                        }
+                        },
+                        picPath = valuesSeq.getOrElse(5){""}
+
 
                     )
 
@@ -150,7 +144,7 @@ object MyController{
 
     fun writeInTo(_tabNameList: MutableList<String>,_itemList: MutableList<MutableList<ItemData>>){
 
-        val writeIntoPath = "src/data/data.xlsx"
+        val writeIntoPath = "data/data.xlsx"
 
         val workBook = XSSFWorkbook()
         //遍历不同的sheet
@@ -163,6 +157,7 @@ object MyController{
                     createCell(2).setCellValue("数量")
                     createCell(3).setCellValue("厚度")
                     createCell(4).setCellValue("id")
+                    createCell(5).setCellValue("图片名")
 
                 }
             }
@@ -176,19 +171,10 @@ object MyController{
                     createCell(0).setCellValue(itemData.type)
                     createCell(1).setCellValue(itemData.description)
                     createCell(2).setCellValue((itemData.number).toString())
-                    createCell(3).setCellValue(itemData.isthick.let {
-                        when(it){
-                            true -> "厚"
-                            else -> "薄"
-                        }
-                    })
+                    createCell(3).setCellValue(itemData.thickness)
                     createCell(4).setCellValue(itemData.id_number.toString())
-
                 }
-
-
             }
-
         }
 
         val fileOutputStream = FileOutputStream(writeIntoPath)

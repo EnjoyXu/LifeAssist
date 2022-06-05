@@ -8,6 +8,9 @@ import javafx.collections.FXCollections
 import javafx.collections.ObservableList
 
 import javafx.scene.Scene
+import javafx.scene.control.Alert
+import javafx.scene.control.ButtonType
+import javafx.scene.control.Dialog
 import javafx.scene.control.Label
 
 import javafx.scene.control.TabPane
@@ -26,9 +29,16 @@ class UIView : Application() {
     companion object {
         //用来跟踪是哪个面板被选中
         var selectedTabIndex : SimpleIntegerProperty? = SimpleIntegerProperty(1)
+        // 左键则是从哪个tab到哪个tab，右键改变的则为在哪个tab
         var changeInfo = SimpleListProperty(FXCollections.observableList(listOf(0, 0)))
+        //点击物品的id
         var changeInfo_idNumber = SimpleLongProperty(0)
+        // 跟踪是否左键点击
+        var clickFlag = SimpleIntegerProperty(1)
+        // 跟踪是否需要改变信息
         var changeFlag = SimpleIntegerProperty(1)
+        // 存储改变信息的item信息
+        lateinit var changeItem :ItemData
 
     }
 
@@ -118,10 +128,38 @@ class UIView : Application() {
         }
     }
 
+    private fun updateData(){
+        // 面板更改信息
+        val _fromTabIdex: Int = changeInfo[0]
+        val _id_number: Long = changeItem.id_number
+
+        val _fromIndex = itemList[_fromTabIdex].map { it.id_number }.indexOf(_id_number)
+
+        itemList[_fromTabIdex][_fromIndex] = changeItem
+
+        itemList.forEach{list->
+            list.forEach{
+                if (it.id_number == _id_number){
+                    it.description = changeItem.description
+                    it.thickness = changeItem.thickness
+                    it.picPath = changeItem.picPath
+                    it.type = changeItem.type
+                }
+            }
+
+        }
+
+
+
+
+    }
+
     private fun touchData(){
         itemList =MyController.itemList
         tabNameList  = MyController.tabNameList
     }
+
+
 
     override fun start(primaryStage: Stage) {
         //模拟一下数据
@@ -148,8 +186,16 @@ class UIView : Application() {
         initializeUI()
 
         //点击label事件的响应
-        changeFlag.addListener { observable, oldValue, newValue ->
+        clickFlag.addListener { observable, oldValue, newValue ->
             update()
+        }
+
+        //更改数据的响应
+        changeFlag.addListener{observable, oldValue, newValue ->
+            updateData()
+            MyController.writeInTo(tabNameList,itemList)
+            initializeUI()
+
         }
 
         // 监听上面版选定的tab
@@ -170,6 +216,7 @@ class UIView : Application() {
         val scene = Scene(root)
 
         scene.root.stylesheets.add("file:src/main/kotlin/nju/lalala/demaxiya/css/UICSS.css")
+        // 设置快捷键 Ctrl+ S 保存
         scene.accelerators.put(
             KeyCodeCombination(
                 KeyCode.S,KeyCodeCombination.CONTROL_ANY
@@ -189,10 +236,26 @@ class UIView : Application() {
 
             this.scene = scene
             show()
+
+            setOnCloseRequest {it ->
+                Alert(Alert.AlertType.CONFIRMATION).apply {
+                    width = 50.0
+                    width = 50.0
+                    title = "退出"
+                    headerText = "是否保存?"
+                    if (this.showAndWait().get() == ButtonType.OK){
+                        MyController.writeInTo(tabNameList,itemList)
+                    }
+                }
+            }
+
         }
         tabpaneUp.prefHeightProperty().bind(scene.heightProperty().divide(2))
         tabpaneDown.prefHeightProperty().bind(scene.heightProperty().divide(2))
 
+
     }
+
+
 
 }
