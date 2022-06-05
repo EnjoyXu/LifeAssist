@@ -1,9 +1,7 @@
 package nju.lalala.demaxiya.view
 
-import javafx.beans.property.IntegerProperty
+
 import javafx.beans.property.SimpleIntegerProperty
-import javafx.beans.value.ChangeListener
-import javafx.beans.value.ObservableValue
 import javafx.event.EventHandler
 import javafx.geometry.Insets
 import javafx.scene.Node
@@ -15,7 +13,7 @@ import javafx.scene.control.Label
 import javafx.scene.control.ScrollPane
 import javafx.scene.control.Separator
 import javafx.scene.control.Tab
-import javafx.scene.control.TextFormatter
+
 import javafx.scene.image.ImageView
 import javafx.scene.input.MouseButton
 import javafx.scene.input.MouseEvent
@@ -24,8 +22,9 @@ import javafx.scene.layout.HBox
 import javafx.scene.layout.VBox
 import javafx.stage.FileChooser
 import javafx.stage.Stage
-import javafx.util.StringConverter
+
 import tornadofx.*
+import java.io.File
 
 
 class MyTab(_string: String, _index: Int) : Tab(_string) {
@@ -59,7 +58,7 @@ class MyTab(_string: String, _index: Int) : Tab(_string) {
         val _spaceIndex = _text.indexOf(" ")
         (((this.content as ScrollPane).content as FlowPane).children[labelIndex] as MyLabel).text =
             _text.substring(0, _spaceIndex) + " " +
-                    ((_text.substring(_spaceIndex + 1, _text.length) as String).toInt() + change).toString()
+                    (_text.substring(_spaceIndex + 1, _text.length).toInt() + change).toString()
     }
 
 }
@@ -163,21 +162,28 @@ class MyPopUpStage(_myLabel:MyLabel) : Stage(){
             if(pictureFile != null){
                 //判断确实是图片格式
                 if (pictureFile.absolutePath.substringAfter(".").lowercase() in listOf<String>("jpg","png","tif","bmp")){
-                    //判断目前是否有图片显示
-                    if (changePicturePath != ""){
-                        root.children.removeAt(5)
-                    }
-
-                    root.children.add(5,
-                        ScrollPane().apply {
-                            content =  ImageView("file:" + pictureFile.absolutePath.replace("\\","/"))
-                        }
-                    )
+//                    //判断目前是否有图片显示
+//                    if (changePicturePath != ""){
+//                        root.children.removeAt(5)
+//                    }
+//
+//                    root.children.add(5,
+//                        ScrollPane().apply {
+//                            content =  ImageView("file:" + pictureFile.absolutePath.replace("\\","/"))
+//                        }
+//                    )
+                    println(pictureFile.absolutePath)
+                    scrollImageView.content =  ImageView("file:" + pictureFile.absolutePath.replace("\\","/"))
+                    changePicturePath = pictureFile.absolutePath.replace("\\","/")
                 }
-                changePicturePath = pictureFile.absolutePath
+
             }
         }
     }
+    private var scrollImageView = ScrollPane().apply {
+        content =  ImageView("file:data/pictures/"+item.picPath)
+    }
+
     private val confirm = Button("确认").apply {
         setOnAction { confirmInfo() }
     }
@@ -197,7 +203,25 @@ class MyPopUpStage(_myLabel:MyLabel) : Stage(){
             _isChanged = true
         }
         if(changePicturePath != item.picPath){
-            item.picPath = changePicturePath
+            //删除原照片
+            if (item.picPath != ""){
+                try {
+                    File("data/pictures/"+item.picPath).delete()
+
+                }catch (e:Exception){
+                    println(e)
+                }
+            }
+            //copy到pictures文件夹
+            try {
+                val _fromFile = File(changePicturePath)
+                val _toPath = "data/pictures/"+_fromFile.name
+                _fromFile.copyTo(File(_toPath), overwrite = true)
+                item.picPath =_fromFile.name
+            }catch (e:Exception){
+                println(e)
+            }
+
             _isChanged = true
         }
 
@@ -247,20 +271,15 @@ class MyPopUpStage(_myLabel:MyLabel) : Stage(){
                     children.addAll(Label("厚薄:"), thickChoiceBox)
                 }
             )
-            children.addAll(
+            children.add(
                 choosePicture
             )
-
-        }
-        if (_myLabel.item.picPath != ""){
-            root.children.addAll(
-                imageview("file:data/pictures/" +item.picPath.replace("\"",""))
+            children.add(
+                scrollImageView
             )
+            children.add(confirm)
+
         }
-
-        root.children.add(confirm)
-
-
 
         this.scene = Scene(root)
 

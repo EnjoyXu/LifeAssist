@@ -173,6 +173,7 @@ object MyController{
                     createCell(2).setCellValue((itemData.number).toString())
                     createCell(3).setCellValue(itemData.thickness)
                     createCell(4).setCellValue(itemData.id_number.toString())
+                    createCell(5).setCellValue(itemData.picPath)
                 }
             }
         }
