@@ -1,0 +1,32 @@
+{
+  "配饰": {
+    "袜子" : "icons8-shoes-32.png",
+    "手套" : "icons8-mittens-32.png",
+    "雨伞" : "icons8-umbrella-32.png",
+    "围巾" : "icons8-scarf-32.png"
+  },
+  "衣服": {
+    "外套" : "icons8-coat-32.png",
+    "夹克" : "icons8-jacket-32.png",
+    "衬衫" : "icons8-shirt-32.png",
+    "T恤" : "icons8-t-shirt-32.png",
+    "背心" : "icons8-vest-32.png",
+    "毛衣" : "icons8-sweater-32.png"
+
+  },
+  "裤子": {
+    "裤子" : "icons8-trousers-32.png",
+    "牛仔裤" : "icons8-jeans-32.png",
+    "短裤" : "icons8-shorts-32.png",
+    "四角内裤" : "icons8-mens-underwear-32.png"
+  },
+  "鞋袜": {
+    "靴子" : "icons8-boots-32.png",
+    "鞋子": "icons8-shoes-32.png",
+    "运动鞋" : "icons8-trainers-32.png",
+    "袜子" : "icons8-socks-32.png"
+  },
+  "其他": {
+    "其他" : "icons8-questions-32.png"
+  }
+}
