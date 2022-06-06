@@ -98,29 +98,31 @@ object MyController{
                         }
                     }.toList()
 
+                    //防止excel中使用清除数据留下没有数据的假行
+                    if(valuesSeq.size>1){
+                        //构建item
+                        _tabItemList += ItemData(
+                            type = valuesSeq[0] ,
+                            number = valuesSeq[2].let{
+                                when(it.contains(".")){
+                                    true -> it.substringBefore(".").toInt()
+                                    else -> it.toInt()
+                                }
+                            },
+                            thickness = valuesSeq[3],
+                            description = valuesSeq.getOrElse(1){""} as String,
+                            _idNumber =   valuesSeq[4].let{
+                                when(it.contains(".")){
+                                    true -> it.substringBefore(".").toLong()
+                                    else -> it.toLong()
+                                }
+                            },
+                            picPath = valuesSeq.getOrElse(5){""}
+                        )
+                    }
 
-                    //构建item
-                    println(valuesSeq)
-                    _tabItemList += ItemData(
-                        type = valuesSeq[0] ,
-                        number = valuesSeq[2].let{
-                                        when(it.contains(".")){
-                                            true -> it.substringBefore(".").toInt()
-                                            else -> it.toInt()
-                                        }
-                        },
-                        thickness = valuesSeq[3],
-                        description = valuesSeq.getOrElse(1){""} as String,
-                        _idNumber =   valuesSeq[4].let{
-                            when(it.contains(".")){
-                                true -> it.substringBefore(".").toLong()
-                                else -> it.toLong()
-                            }
-                        },
-                        picPath = valuesSeq.getOrElse(5){""}
 
 
-                    )
 
                 }
             }
