@@ -5,13 +5,11 @@ import javafx.beans.property.SimpleIntegerProperty
 import javafx.beans.property.SimpleListProperty
 import javafx.beans.property.SimpleLongProperty
 import javafx.collections.FXCollections
-import javafx.collections.ObservableList
 
 import javafx.scene.Scene
 import javafx.scene.control.Alert
 import javafx.scene.control.ButtonType
-import javafx.scene.control.Dialog
-import javafx.scene.control.Label
+
 
 import javafx.scene.control.TabPane
 import javafx.scene.input.KeyCode
@@ -20,9 +18,8 @@ import javafx.scene.input.KeyCodeCombination
 import javafx.scene.layout.Priority
 import javafx.scene.layout.VBox
 import javafx.stage.Stage
-import tornadofx.bind
 import tornadofx.vgrow
-import java.awt.event.KeyEvent
+
 
 
 class UIView : Application() {
@@ -129,7 +126,7 @@ class UIView : Application() {
     }
 
     private fun updateData(){
-        // 面板更改信息
+        // 右键后直接更改信息
         val _fromTabIdex: Int = changeInfo[0]
         val _id_number: Long = changeItem.id_number
 
@@ -149,14 +146,28 @@ class UIView : Application() {
 
         }
 
-
-
-
     }
 
     private fun touchData(){
         itemList =MyController.itemList
         tabNameList  = MyController.tabNameList
+    }
+
+
+    private fun sortData(){
+        // 根据薄-厚，类型名称进行排序
+        itemList.forEach {tabList ->
+            tabList.sortWith(Comparator{item1,item2->
+                //厚薄升序排列，厚-薄
+                if (item1.thickness != item2.thickness){
+                    item1.thickness.compareTo(item2.thickness)
+                }else{
+                    item1.type.compareTo(item2.type)
+                }
+
+            })
+
+        }
     }
 
 
@@ -215,13 +226,14 @@ class UIView : Application() {
 
         val scene = Scene(root)
 
-        scene.root.stylesheets.add("file:src/main/kotlin/nju/lalala/demaxiya/css/UICSS.css")
+        scene.root.stylesheets.add("file:data/config/UICSS.css")
         // 设置快捷键 Ctrl+ S 保存
         scene.accelerators.put(
             KeyCodeCombination(
                 KeyCode.S,KeyCodeCombination.CONTROL_ANY
             )
         ){
+            sortData()
             MyController.writeInTo(tabNameList,itemList)
             touchData()
             initializeUI()
@@ -244,6 +256,7 @@ class UIView : Application() {
                     title = "退出"
                     headerText = "是否保存?"
                     if (this.showAndWait().get() == ButtonType.OK){
+                        sortData()
                         MyController.writeInTo(tabNameList,itemList)
                     }
                 }

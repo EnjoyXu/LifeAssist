@@ -13,6 +13,7 @@ import javafx.scene.control.Label
 import javafx.scene.control.ScrollPane
 import javafx.scene.control.Separator
 import javafx.scene.control.Tab
+import javafx.scene.control.TextField
 
 import javafx.scene.image.ImageView
 import javafx.scene.input.MouseButton
@@ -35,7 +36,9 @@ class MyTab(_string: String, _index: Int) : Tab(_string) {
         this.apply {
             text = _string
             content = ScrollPane().apply {
-                content = FlowPane()
+                content = FlowPane().apply {
+                    style = "-fx-background-color : white"
+                }
                 (this.content as FlowPane).prefHeightProperty().bind(this.heightProperty())
                 (this.content as FlowPane).prefWidthProperty().bind(this.widthProperty())
             }
@@ -94,8 +97,6 @@ class MyLabel(val item : ItemData,  var tabIndex: Int = 0) : Label() {
                     if (it.clickCount == 1){
                         MyPopUpStage(this@MyLabel).show()
 
-//                        UIView.changeFlag.value *= -1
-
                     }
 
                 }
@@ -138,9 +139,7 @@ class MyPopUpStage(_myLabel:MyLabel) : Stage(){
     private val numberTextField = textfield (item.number.toString() ).apply {
         // 设置>0
         filterInput {change->
-            !change.isAdded || change.controlNewText.let {
-                it.toInt() > 0
-            }
+            !change.isAdded || change.controlNewText.toInt() > 0
         }
     }
     private val descriptionTextField = textfield ( item.description)
@@ -162,16 +161,6 @@ class MyPopUpStage(_myLabel:MyLabel) : Stage(){
             if(pictureFile != null){
                 //判断确实是图片格式
                 if (pictureFile.absolutePath.substringAfter(".").lowercase() in listOf<String>("jpg","png","tif","bmp")){
-//                    //判断目前是否有图片显示
-//                    if (changePicturePath != ""){
-//                        root.children.removeAt(5)
-//                    }
-//
-//                    root.children.add(5,
-//                        ScrollPane().apply {
-//                            content =  ImageView("file:" + pictureFile.absolutePath.replace("\\","/"))
-//                        }
-//                    )
                     println(pictureFile.absolutePath)
                     scrollImageView.content =  ImageView("file:" + pictureFile.absolutePath.replace("\\","/"))
                     changePicturePath = pictureFile.absolutePath.replace("\\","/")
@@ -298,7 +287,7 @@ class MyTypeChoiceBox(selectedType:String):ChoiceBox<Any>(){
 //                }
 //            }
 //        }
-        MyIconMap.secondKeys.forEachIndexed { firstIndex, secondKeyList ->
+        MyIconMap.secondKeys.forEachIndexed { _, secondKeyList ->
             secondKeyList.forEachIndexed{index,secondKey->
                 if (index==0){
                     this.items.add(Separator())
