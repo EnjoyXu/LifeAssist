@@ -106,6 +106,7 @@ class MyLabel(val item : ItemData,  var tabIndex: Int = 0) : Label() {
         when(item.thickness){
             "厚" -> this.style = "-fx-background-color : #FFA07A"
             "薄" -> this.style = "-fx-background-color : #87CEFA"
+            else -> this.style = "-fx-background-color : #D8D8D8"
         }
 
         //设置icon
@@ -145,7 +146,7 @@ class MyPopUpStage(_myLabel:MyLabel) : Stage(){
     private val descriptionTextField = textfield ( item.description)
 
     private val thickChoiceBox = ChoiceBox<String>().apply {
-        items.addAll("厚","薄")
+        items.addAll("厚","薄","其他")
         value = item.thickness
     }
 
