@@ -21,7 +21,6 @@ import javafx.stage.Stage
 import tornadofx.vgrow
 
 
-
 class UIView : Application() {
     companion object {
         //用来跟踪是哪个面板被选中
@@ -265,7 +264,6 @@ class UIView : Application() {
         }
         tabpaneUp.prefHeightProperty().bind(scene.heightProperty().divide(2))
         tabpaneDown.prefHeightProperty().bind(scene.heightProperty().divide(2))
-
 
     }
 

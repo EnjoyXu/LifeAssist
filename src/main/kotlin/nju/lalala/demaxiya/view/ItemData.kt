@@ -7,7 +7,7 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
-
+import java.math.BigDecimal
 
 
 //数据储存的类
@@ -112,10 +112,16 @@ object MyController{
                             thickness = valuesSeq[3],
                             description = valuesSeq.getOrElse(1){""} as String,
                             _idNumber =   valuesSeq[4].let{
-                                when(it.contains(".")){
-                                    true -> it.substringBefore(".").toLong()
-                                    else -> it.toLong()
+                                if (it.lowercase().contains("e")){
+                                    BigDecimal(it).longValueExact()
                                 }
+                                else{
+                                    when(it.contains(".")){
+                                        true -> it.substringBefore(".").toLong()
+                                        else -> it.toLong()
+                                    }
+                                }
+
                             },
                             picPath = valuesSeq.getOrElse(5){""}
                         )
